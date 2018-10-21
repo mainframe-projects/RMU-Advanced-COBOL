@@ -1,0 +1,188 @@
+       IDENTIFICATION DIVISION.                                         00010001
+      *********************************************************         00020001
+       PROGRAM-ID. PROG9A.                                              00030001
+       AUTHOR. TYLER LAWTON.                                            00040001
+       DATE-WRITTEN. 09/18/18.                                          00050001
+       DATE-COMPILED.                                                   00060001
+      *                                                                 00070001
+      *********************************************************         00080001
+       ENVIRONMENT DIVISION.                                            00090001
+      *********************************************************         00100001
+      *                                                                 00110001
+       INPUT-OUTPUT SECTION.                                            00120001
+      *********************************************************         00130001
+      *                                                                 00140001
+       FILE-CONTROL.                                                    00150001
+            SELECT IN-EMPLDAT  ASSIGN TO EMPLDAT.                       00160001
+            SELECT OUT-EMPLRPT ASSIGN TO EMPLRPT.                       00162001
+      *                                                                 00163001
+      *********************************************************         00164001
+       DATA DIVISION.                                                   00165001
+      *********************************************************         00166001
+      *                                                                 00167001
+       FILE SECTION.                                                    00168001
+      *********************************************************         00169001
+       FD  IN-EMPLDAT                                                   00170001
+           RECORD CONTAINS 80 CHARACTERS                                00180001
+           RECORDING MODE IS F                                          00190001
+           LABEL RECORDS ARE STANDARD                                   00200001
+           DATA RECORD IS ERC-EMPL-REC.                                 00210001
+      *                                                                 00220001
+       01  ERC-EMPL-REC.                                                00230001
+           05  ERC-DEPT              PIC 9(2).                          00260001
+           05  ERC-AREA              PIC 9(2).                          00270001
+           05  ERC-OTHER             PIC X(76).                         00271001
+      *                                                                 00278001
+       FD  OUT-EMPLRPT                                                  00280101
+           RECORD CONTAINS 132 CHARACTERS                               00280201
+           RECORDING MODE IS F                                          00280301
+           LABEL RECORDS ARE STANDARD                                   00280401
+           DATA RECORD IS PRINT-LINE.                                   00280509
+      *                                                                 00280601
+       01  PRINT-LINE                PIC X(132).                        00280709
+      *                                                                 00280801
+       WORKING-STORAGE SECTION.                                         00280901
+      *********************************************************         00281001
+      *                                                                 00586001
+       01   WS-FLAGS.                                                   00586102
+            05  WS-EMPLDAT-EOF PIC X  VALUE "N".                        00586201
+      *                                                                 00586301
+       01   WS-TOTALS.                                                  00586401
+            05  WS-TOTAL-EMPL  PIC 9(5)  VALUE ZEROS.                   00586608
+      *                                                                 00586701
+       01   WS-SUBSCRIPTS.                                              00587101
+            05  WS-ROW-SUB     PIC 99 VALUE ZEROS.                      00587201
+            05  WS-COL-SUB     PIC 99 VALUE ZEROS.                      00587301
+      *                                                                 00587401
+       01   WS-CURRENT-DATE-AND-TIME.                                   00587510
+            05  WS-YEAR        PIC XXXX.                                00587611
+            05  WS-MONTH       PIC XX.                                  00587711
+            05  WS-DAY         PIC XX.                                  00587811
+            05  WS-HOUR        PIC XX.                                  00587911
+            05  WS-MINUTE      PIC XX.                                  00588011
+            05  FILLER         PIC X(9).                                00588110
+      *                                                                 00588211
+       01   WS-EMPL-TABLE.                                              00588310
+            05  WS-EMPL-TABLE-ROW  OCCURS 20 TIMES.                     00588410
+                 10  WS-EMPL-TABLE-COLUMN  OCCURS 10 TIMES.             00588510
+                     15  WS-EMPL-PER-AREA           PIC 999.            00588610
+      *                                                                 00589001
+       01   WS-BLANK-LINE      PIC X(132) VALUE SPACES.                 00590001
+      *                                                                 00590101
+       01   HL1-HEADING-LINE-1.                                         00590201
+            05  FILLER         PIC X(35)  VALUE SPACES.                 00591015
+            05  FILLER         PIC X(47)                                00592001
+                VALUE "TOTAL NO OF EMPLOYEES BY AREA WITHIN DEPARTMENT".00592101
+            05  FILLER         PIC X(9)   VALUE SPACES.                 00592211
+            05  HL1-DATE.                                               00592311
+                10  HL1-MONTH      PIC XX.                              00592411
+                10  FILLER         PIC X        VALUE "/".              00592511
+                10  HL1-DAY        PIC XX.                              00592611
+                10  FILLER         PIC X        VALUE "/".              00592711
+                10  HL1-YEAR       PIC XXXX.                            00592811
+      *                                                                 00594201
+       01   HL2-HEADING-LINE-2.                                         00594301
+            05  FILLER         PIC X(18)  VALUE SPACES.                 00594418
+            05  FILLER         PIC X(10)  VALUE "   AREA1  ".           00594601
+            05  FILLER         PIC X(10)  VALUE "   AREA2  ".           00594701
+            05  FILLER         PIC X(10)  VALUE "   AREA3  ".           00594801
+            05  FILLER         PIC X(10)  VALUE "   AREA4  ".           00594901
+            05  FILLER         PIC X(10)  VALUE "   AREA5  ".           00595001
+            05  FILLER         PIC X(10)  VALUE "   AREA6  ".           00595101
+            05  FILLER         PIC X(10)  VALUE "   AREA7  ".           00595201
+            05  FILLER         PIC X(10)  VALUE "   AREA8  ".           00595301
+            05  FILLER         PIC X(10)  VALUE "   AREA9  ".           00595401
+            05  FILLER         PIC X(10)  VALUE "   AREA10 ".           00595501
+      *                                                                 00596001
+       01   RL-PRINT-LINE.                                              00600309
+            05  FILLER               PIC X(1)   VALUE SPACES.           00600415
+            05  FILLER               PIC X(11)  VALUE "DEPARTMENT-".    00600501
+            05  RL-DEPT-NUM          PIC 9(2).                          00600901
+            05  FILLER               PIC X(4)   VALUE SPACES.           00601216
+            05  RL-EMPL-TOTAL-GROUP  OCCURS 10 TIMES.                   00602106
+                10  FILLER           PIC X(3).                          00602208
+                10  RL-EMPL-PER-AREA PIC ZZ9.                           00602313
+                10  FILLER           PIC X(4).                          00602401
+      *                                                                 00602501
+       01   GTL-GRAND-TOTAL-LINE.                                       00603201
+            05  FILLER               PIC X(1)   VALUE SPACES.           00603315
+            05  FILLER               PIC X(17)                          00603401
+                  VALUE "TOTAL EMPLOYEES: ".                            00603501
+            05  GTL-TOTAL-EMPL       PIC ZZ,ZZ9.                        00603613
+      *                                                                 00603801
+      *********************************************************         00603901
+       PROCEDURE DIVISION.                                              00604001
+      *********************************************************         00604101
+      *                                                                 01280001
+       000-PROGRAM-CONTROL.                                             01290001
+      *********************************************************         01300001
+      *                                                                 01301001
+           PERFORM A100-INIT-WS-EMPL-TABLE.                             01310002
+           PERFORM A200-LOAD-WS-EMPL-TABLE.                             01320002
+           PERFORM A300-WRITE-REPORT.                                   01330014
+           STOP RUN.                                                    01340002
+      *                                                                 01350001
+       A100-INIT-WS-EMPL-TABLE.                                         01360001
+      *********************************************************         01370001
+      *                                                                 01380001
+           PERFORM VARYING WS-ROW-SUB FROM 1 BY 1                       01381002
+                   UNTIL   WS-ROW-SUB > 20                              01382002
+                   PERFORM VARYING WS-COL-SUB FROM 1 BY 1               01383002
+                           UNTIL   WS-COL-SUB > 10                      01384002
+                           MOVE ZEROS TO                                01385003
+                            WS-EMPL-PER-AREA (WS-ROW-SUB, WS-COL-SUB)   01385109
+                   END-PERFORM                                          01385203
+           END-PERFORM.                                                 01386002
+      *                                                                 01387001
+       A200-LOAD-WS-EMPL-TABLE.                                         01390001
+      *********************************************************         01400001
+      *                                                                 01410001
+           OPEN INPUT IN-EMPLDAT.                                       01410102
+           PERFORM UNTIL WS-EMPLDAT-EOF = "Y"                           01410202
+              READ IN-EMPLDAT                                           01410302
+                AT END                                                  01410402
+                   MOVE "Y" TO WS-EMPLDAT-EOF                           01410502
+                NOT AT END                                              01410602
+                   ADD 1    TO WS-EMPL-PER-AREA (ERC-DEPT, ERC-AREA)    01410714
+              END-READ                                                  01410802
+           END-PERFORM.                                                 01416002
+           CLOSE IN-EMPLDAT.                                            01417002
+      *                                                                 01418001
+       A300-WRITE-REPORT.                                               01420014
+      *********************************************************         01430001
+      *                                                                 01440001
+           OPEN OUTPUT OUT-EMPLRPT.                                     01441004
+      *                                                                 01441102
+           PERFORM B100-GET-DATE-TIME.                                  01441212
+           WRITE   PRINT-LINE FROM HL1-HEADING-LINE-1                   01442012
+                   AFTER ADVANCING 2 LINES.                             01442112
+           WRITE   PRINT-LINE FROM HL2-HEADING-LINE-2                   01443012
+                   AFTER ADVANCING 2 LINES.                             01444012
+      *                                                                 01445002
+           PERFORM VARYING WS-ROW-SUB FROM 1 BY 1                       01446002
+                   UNTIL   WS-ROW-SUB > 20                              01446109
+                   MOVE    WS-ROW-SUB TO RL-DEPT-NUM                    01446209
+               PERFORM VARYING WS-COL-SUB FROM 1 BY 1                   01447007
+                       UNTIL   WS-COL-SUB > 10                          01448007
+                       MOVE    WS-EMPL-PER-AREA (WS-ROW-SUB, WS-COL-SUB)01449009
+                         TO    RL-EMPL-PER-AREA (WS-COL-SUB)            01449113
+                       ADD     WS-EMPL-PER-AREA (WS-ROW-SUB, WS-COL-SUB)01449213
+                         TO    WS-TOTAL-EMPL                            01449313
+               END-PERFORM                                              01449409
+                   WRITE   PRINT-LINE FROM RL-PRINT-LINE                01449509
+                           AFTER ADVANCING 2 LINES                      01449609
+           END-PERFORM                                                  01449707
+      *                                                                 01449813
+           MOVE    WS-TOTAL-EMPL TO   GTL-TOTAL-EMPL.                   01449914
+           WRITE   PRINT-LINE    FROM GTL-GRAND-TOTAL-LINE.             01450014
+      *                                                                 01450113
+           CLOSE   OUT-EMPLRPT.                                         01450214
+      *                                                                 01451001
+       B100-GET-DATE-TIME.                                              01460011
+      *********************************************************         01470011
+      *                                                                 01480011
+           MOVE FUNCTION CURRENT-DATE TO WS-CURRENT-DATE-AND-TIME.      01481011
+           MOVE WS-MONTH              TO HL1-MONTH.                     01482011
+           MOVE WS-DAY                TO HL1-DAY.                       01483011
+           MOVE WS-YEAR               TO HL1-YEAR.                      01484011
+      *                                                                 01490011

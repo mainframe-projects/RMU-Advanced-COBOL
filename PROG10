@@ -1,0 +1,773 @@
+000010*----------------------------------------------------------------*00001074
+000100 IDENTIFICATION DIVISION.                                         00010000
+000110*----------------------------------------------------------------*00011074
+000120                                                                  00012031
+000300 PROGRAM-ID. PROG10.                                              00030042
+000400 AUTHOR. TYLER LAWTON.                                            00040000
+000500 DATE-WRITTEN. 09/27/18.                                          00050029
+000600 DATE-COMPILED.                                                   00060000
+000700                                                                  00070031
+000800*----------------------------------------------------------------*00080074
+000900 ENVIRONMENT DIVISION.                                            00090031
+000910*----------------------------------------------------------------*00091074
+001100                                                                  00110031
+001120*---------------------*                                           00112074
+001200 INPUT-OUTPUT SECTION.                                            00120000
+001310*---------------------*                                           00131074
+001400                                                                  00140031
+001500 FILE-CONTROL.                                                    00150000
+001600      SELECT IN-CUSTDAT   ASSIGN TO CUSTDAT.                      00160032
+001610      SELECT OUT-ERRORRPT ASSIGN TO ERRORRPT.                     00161030
+001611      SELECT OUT-CUSTDAT2 ASSIGN TO CUSTDAT2.                     00161130
+001612                                                                  00161231
+001614*----------------------------------------------------------------*00161474
+001615 DATA DIVISION.                                                   00161530
+001616*----------------------------------------------------------------*00161674
+001618                                                                  00161831
+001620*-------------*                                                   00162074
+001621 FILE SECTION.                                                    00162130
+001622*-------------*                                                   00162274
+001623                                                                  00162331
+001624 FD  IN-CUSTDAT                                                   00162453
+001625     RECORDING MODE IS F                                          00162552
+001626     RECORD CONTAINS 80 CHARACTERS                                00162651
+001640     LABEL RECORDS ARE STANDARD                                   00164051
+001650     DATA RECORD IS IN-CUSTDAT-RECORD.                            00165051
+001660                                                                  00166031
+001670 01  IN-CUSTDAT-RECORD.                                           00167051
+001680     05 IN-CUST-NUM           PIC   9999.                         00168032
+001681        88 VALID-CUST-NUM     VALUE 101 THRU 9621.                00168132
+001690     05 IN-CUST-NAME          PIC   X(26).                        00169032
+001700     05 IN-STORE-NUM          PIC   9.                            00170033
+001710        88 VALID-STORE-NUM    VALUE 1   THRU 4.                   00171032
+001800     05 IN-SALESPERSON-NUM    PIC   9(3).                         00180048
+001900     05 IN-SALES-AMOUNT       PIC   S9(3)V99.                     00190032
+001910        88 VALID-SALES-RANGE  VALUE 0   THRU 150.                 00191061
+001920     05 IN-SALES-AMOUNT-X REDEFINES IN-SALES-AMOUNT               00192099
+001930                              PIC   ZZ9V99.                       00193099
+002000     05 IN-SALE-DATE.                                             00200032
+002100        10 IN-SALE-MONTH        PIC   99.                         00210032
+002110           88 VALID-SALE-MONTH  VALUE 1     THRU 12.              00211071
+002200        10 IN-SALE-DAY          PIC   99.                         00220032
+002210           88 VALID-JAN         VALUE 1     THRU 31.              00221079
+002220           88 VALID-FEB         VALUE 1     THRU 28.              00222079
+002230           88 VALID-MAR         VALUE 1     THRU 31.              00223079
+002240           88 VALID-APR         VALUE 1     THRU 30.              00224079
+002250           88 VALID-MAY         VALUE 1     THRU 31.              00225079
+002260           88 VALID-JUN         VALUE 1     THRU 30.              00226079
+002270           88 VALID-JUL         VALUE 1     THRU 31.              00227079
+002280           88 VALID-AUG         VALUE 1     THRU 31.              00228079
+002290           88 VALID-SEP         VALUE 1     THRU 30.              00229079
+002291           88 VALID-OCT         VALUE 1     THRU 31.              00229179
+002292           88 VALID-NOV         VALUE 1     THRU 30.              00229279
+002293           88 VALID-DEC         VALUE 1     THRU 31.              00229379
+002300        10 IN-SALE-YEAR         PIC   9999.                       00230032
+002310           88 VALID-SALE-YEAR   VALUE 2000  THRU 2099.            00231083
+002400     05 FILLER                PIC X(33).                          00240032
+002500                                                                  00250031
+002510                                                                  00251031
+002600 FD  OUT-ERRORRPT                                                 00260053
+002610     RECORDING MODE IS F                                          00261052
+002700     RECORD CONTAINS 132 CHARACTERS                               00270049
+002801     LABEL RECORDS ARE STANDARD                                   00280149
+002802     DATA RECORD IS PRINT-LINE-ERRORRPT.                          00280249
+002803                                                                  00280331
+002804 01  PRINT-LINE-ERRORRPT       PIC X(132).                        00280430
+002805                                                                  00280531
+002806                                                                  00280631
+002807 FD  OUT-CUSTDAT2                                                 00280753
+002808     RECORDING MODE IS F                                          00280852
+002809     RECORD CONTAINS 133 CHARACTERS                               00280949
+002811     LABEL RECORDS ARE STANDARD                                   00281149
+002812     DATA RECORD IS PRINT-LINE-CUSTDAT2.                          00281249
+002813                                                                  00281331
+002814 01  PRINT-LINE-CUSTDAT2       PIC X(133).                        00281447
+002815                                                                  00281531
+002816*------------------------*                                        00281674
+002817 WORKING-STORAGE SECTION.                                         00281730
+002818*------------------------*                                        00281874
+002819                                                                  00281931
+002820 01 WS-AREA.                                                      00282082
+002821    05  WS-RUN-DATE-INT          PIC 9(8).                        00282183
+002826    05  WS-SALE-DATE-INT         PIC 9(8).                        00282683
+002827    05  WS-SALE-DATE-GROUP.                                       00282782
+002828        10  WS-SALE-YEAR             PIC 9999.                    00282882
+002829        10  WS-SALE-MONTH            PIC 99.                      00282982
+002830        10  WS-SALE-DAY              PIC 99.                      00283082
+002831    05  WS-DAYS-SINCE-SALE       PIC S9(8).                       00283182
+002832                                                                  00283282
+002833 01 WS-SWITCHES.                                                  00283382
+002834    05  ARE-THERE-MORE-RECORDS    PIC X.                          00283482
+002835        88 NO-MORE-RECORDS                  VALUE "N".            00283582
+002836    05  IS-THERE-AN-ERROR         PIC X.                          00283682
+002837        88 ERROR-HAS-OCCURED                VALUE "Y".            00283782
+002838                                                                  00283882
+002839                                                                  00283931
+002840 01 WS-TOTALS.                                                    00284031
+002841    05  WS-TOTAL-RECS-PROCESSED   PIC 999.                        00284131
+002842    05  WS-TOTAL-RECS-VALID       PIC 999.                        00284231
+002843    05  WS-TOTAL-RECS-INVALID     PIC 999.                        00284331
+002844    05  WS-TOTAL-FIELD-ERRORS     PIC 999.                        00284431
+002845    05  WS-LINE-COUNT             PIC 999.                        00284533
+002846    05  WS-PAGE-COUNT             PIC 999.                        00284633
+002847                                                                  00284731
+002848 01 WS-SUBSCRIPTS.                                                00284831
+002849    05  WS-ROW-SUB                PIC 99   VALUE ZEROS.           00284931
+002850    05  WS-COL-SUB                PIC 99   VALUE ZEROS.           00285031
+002860                                                                  00286031
+002870 01 WS-CURRENT-DATE-AND-TIME.                                     00287031
+002871   03 WS-CURRENT-DATE.                                            00287183
+002880      05  WS-YEAR        PIC 9999.                                00288083
+002890      05  WS-MONTH       PIC 99.                                  00289083
+002900      05  WS-DAY         PIC 99.                                  00290083
+002910   03 WS-CURRENT-TIME.                                            00291083
+003000      05  WS-HOUR        PIC 99.                                  00300083
+003100      05  WS-MIN         PIC 99.                                  00310083
+003200   03  FILLER            PIC 9(9).                                00320084
+003800                                                                  00380031
+003810 01 WS-MONTH-NAMES.                                               00381099
+003811    05 WS-MONTH-TABLE                                             00381199
+003860       OCCURS 12 TIMES                                            00386099
+003870       INDEXED BY MONTH-INDEX.                                    00387099
+003880       10 MONTH-NAME   PIC XXX.                                   00388099
+003890                                                                  00389099
+003900 01 WS-BLANK-LINE      PIC X(132) VALUE SPACES.                   00390031
+003901                                                                  00390199
+004010 01 HL1-HEADING-LINE-1.                                           00401031
+004011    05  FILLER         PIC X(6)   VALUE "DATE: ".                 00401131
+004012    05  HL1-DATE.                                                 00401231
+004013        10  HL1-MONTH      PIC XXX.                               00401399
+004014        10  FILLER         PIC X        VALUE " ".                00401499
+004015        10  HL1-DAY        PIC XX.                                00401531
+004016        10  FILLER         PIC XX       VALUE ", ".               00401699
+004017        10  HL1-YEAR       PIC XXXX.                              00401731
+004020    05  FILLER         PIC X(103) VALUE SPACES.                   00402099
+004030    05  FILLER         PIC X(6)   VALUE "PAGE: ".                 00403033
+004050    05  HL1-PAGE-NUM   PIC Z99.                                   00405031
+004093                                                                  00409331
+004100 01 HL2-HEADING-LINE-2.                                           00410033
+004200    05  FILLER         PIC X(6)     VALUE "TIME: ".               00420031
+004210    05  HL2-TIME.                                                 00421031
+004220        10  HL2-HOUR       PIC XX.                                00422031
+004230        10  FILLER         PIC X        VALUE ":".                00423056
+004240        10  HL2-MIN        PIC XX.                                00424035
+004250    05  FILLER         PIC X(27)    VALUE SPACES.                 00425056
+004300    05  FILLER         PIC X(27)                                  00430031
+004400        VALUE "CUSTOMER FILE ERROR REPORT".                       00440031
+005200                                                                  00520031
+005300 01 HL3-HEADING-LINE-3.                                           00530031
+005400    05  FILLER  PIC X(8)   VALUE "CUSTOMER".                      00540031
+005500    05  FILLER  PIC X(2)   VALUE SPACES.                          00550031
+005600    05  FILLER  PIC X(8)   VALUE "CUSTOMER".                      00560031
+005700    05  FILLER  PIC X(20)  VALUE SPACES.                          00570031
+005800    05  FILLER  PIC X(5)   VALUE "ERROR".                         00580031
+005900    05  FILLER  PIC X(52)  VALUE SPACES.                          00590099
+005910    05  FILLER  PIC X(5)   VALUE "ERROR".                         00591031
+005920                                                                  00592031
+005930 01 HL4-HEADING-LINE-4.                                           00593031
+005940    05  FILLER  PIC X(6)   VALUE "NUMBER".                        00594033
+005950    05  FILLER  PIC X(4)   VALUE SPACES.                          00595031
+005951    05  FILLER  PIC X(4)   VALUE "NAME".                          00595131
+005952    05  FILLER  PIC X(24)  VALUE SPACES.                          00595248
+005953    05  FILLER  PIC X(7)   VALUE "MESSAGE".                       00595331
+005954    05  FILLER  PIC X(50)  VALUE SPACES.                          00595499
+005955    05  FILLER  PIC X(11)  VALUE "FIELD VALUE".                   00595531
+005956                                                                  00595631
+005957 01 WS-LINE-SEPARATOR-2.                                          00595799
+005959    05 FILLER        PIC X(4)  VALUE "----".                      00595999
+005960    05 FILLER        PIC X(6)  VALUE SPACES.                      00596099
+005961    05 NAME-SPACER   OCCURS 26 TIMES.                             00596199
+005962       10 NSPACE     PIC X VALUE " ".                             00596299
+005963    05 FILLER        PIC X(2)  VALUE SPACES.                      00596399
+005964    05 ERROR-SPACER  OCCURS 55 TIMES.                             00596499
+005965       10 ESPACE     PIC X VALUE " ".                             00596599
+005966    05 FILLER        PIC X(2)  VALUE SPACES.                      00596699
+005967    05 FILLER        PIC X(10) VALUE "----------".                00596799
+005968                                                                  00596899
+005969 01 EDL-ERROR-DETAIL-LINE.                                        00596932
+005970    05  EDL-CUST-NUM      PIC X(4).                               00597032
+005971    05  FILLER            PIC X(6).                               00597132
+005972    05  EDL-CUST-NAME     PIC X(26).                              00597232
+005973    05  FILLER            PIC X(2).                               00597332
+005974    05  EDL-ERROR-MESSAGE PIC X(55).                              00597499
+005975    05  FILLER            PIC X(2).                               00597532
+005976    05  EDL-ERROR-FIELD   PIC X(10).                              00597682
+005977    05  EDL-ERROR-FIELD-5 REDEFINES EDL-ERROR-FIELD.              00597790
+005978        10 EDL-ERROR-FIELD-5A   PIC XXX.                          00597890
+005979        10 EDL-ERROR-FIELD-5B   PIC XX.                           00597992
+005980        10 EDL-ERROR-FIELD-5C   PIC X.                            00598092
+005981        10 FILLER               PIC X(4).                         00598191
+005982    05  EDL-ERROR-FIELD-6 REDEFINES EDL-ERROR-FIELD.              00598299
+005983        10 EDL-ERROR-FIELD-6A    PIC $ZZ,ZZ9.99.                  00598399
+005984    05  EDL-ERROR-FIELD-8Y REDEFINES EDL-ERROR-FIELD.             00598496
+005985        10 EDL-ERROR-FIELD-8YA   PIC X.                           00598597
+005986        10 EDL-ERROR-FIELD-8YB   PIC XXXX.                        00598696
+005987        10 EDL-ERROR-FIELD-8YC   PIC X.                           00598796
+005988        10 EDL-ERROR-FIELD-8YD   PIC XX.                          00598896
+005989        10 EDL-ERROR-FIELD-8YE   PIC XX.                          00598996
+005990    05  EDL-ERROR-FIELD-8M REDEFINES EDL-ERROR-FIELD.             00599098
+005991        10 EDL-ERROR-FIELD-8MA   PIC XXXX.                        00599198
+005992        10 EDL-ERROR-FIELD-8MB   PIC X.                           00599298
+005993        10 EDL-ERROR-FIELD-8MC   PIC XX.                          00599398
+005994        10 EDL-ERROR-FIELD-8MD   PIC X.                           00599498
+005995        10 EDL-ERROR-FIELD-8ME   PIC XX.                          00599598
+005996    05  EDL-ERROR-FIELD-8D REDEFINES EDL-ERROR-FIELD.             00599698
+005997        10 EDL-ERROR-FIELD-8DA   PIC XXXX.                        00599798
+005998        10 EDL-ERROR-FIELD-8DB   PIC XX.                          00599899
+005999        10 EDL-ERROR-FIELD-8DC   PIC X.                           00599998
+006000        10 EDL-ERROR-FIELD-8DD   PIC XX.                          00600098
+006001        10 EDL-ERROR-FIELD-8DE   PIC X.                           00600198
+006002                                                                  00600299
+006003 01 TL-TOTAL-LINE.                                                00600398
+006004    05  FILLER              PIC X(19) VALUE "RECORDS PROCESSED: ".00600498
+006005    05  TL-RECORDS-PROCESSED PIC ZZ9.                             00600598
+006006    05  FILLER               PIC X(5)  VALUE SPACES.              00600698
+006007    05  FILLER               PIC X(15) VALUE "VALID RECORDS: ".   00600798
+006008    05  TL-RECORDS-VALID     PIC ZZ9.                             00600898
+006009    05  FILLER               PIC X(5)  VALUE SPACES.              00600998
+006010    05  FILLER               PIC X(17) VALUE "INVALID RECORDS: ". 00601098
+006011    05  TL-RECORDS-INVALID   PIC ZZ9.                             00601198
+006012    05  FILLER               PIC X(5)  VALUE SPACES.              00601298
+006013    05  FILLER               PIC X(14) VALUE "FIELD ERRORS: ".    00601398
+006014    05  TL-FIELD-ERRORS      PIC ZZ9.                             00601498
+006015                                                                  00601598
+006016*----------------------------------------------------------------*00601698
+006017 PROCEDURE DIVISION.                                              00601798
+006018*----------------------------------------------------------------*00601898
+006019                                                                  00601998
+006020*-------------------*                                             00602098
+006021 000-CONTROL-MODULE.                                              00602198
+006030*-------------------*                                             00603074
+006100     PERFORM A100-INIT-MODULE.                                    00610032
+006200     PERFORM A200-HEADINGS-MODULE.                                00620032
+006210     MOVE "Y" TO ARE-THERE-MORE-RECORDS                           00621075
+006300     PERFORM                                                      00630032
+006400     UNTIL NO-MORE-RECORDS                                        00640032
+006500           READ IN-CUSTDAT                                        00650033
+006600                AT END                                            00660032
+006700                  MOVE "N" TO ARE-THERE-MORE-RECORDS              00670037
+006800                NOT AT END                                        00680032
+006900                  PERFORM A300-ERROR-MODULE                       00690033
+007000           END-READ                                               00700033
+007100     END-PERFORM.                                                 00710032
+007200     PERFORM A400-FINALIZE-MODULE.                                00720032
+007210     STOP RUN.                                                    00721032
+007300                                                                  00730032
+007301                                                                  00730181
+007302                                                                  00730281
+007303*-----------------*                                               00730381
+007310 A100-INIT-MODULE.                                                00731032
+007311*-----------------*                                               00731174
+007312     OPEN INPUT  IN-CUSTDAT.                                      00731232
+007313     OPEN OUTPUT OUT-CUSTDAT2.                                    00731344
+007314     OPEN OUTPUT OUT-ERRORRPT.                                    00731444
+007315                                                                  00731599
+007316     MOVE FUNCTION CURRENT-DATE TO WS-CURRENT-DATE-AND-TIME.      00731699
+007317     MOVE "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC"                  00731799
+007318       TO WS-MONTH-NAMES.                                         00731899
+007319                                                                  00731999
+007320     PERFORM VARYING MONTH-INDEX FROM 1 BY 1                      00732099
+007321             UNTIL   MONTH-INDEX > 12                             00732199
+007322             IF WS-MONTH = MONTH-INDEX                            00732299
+007323                MOVE WS-MONTH-TABLE (MONTH-INDEX) TO HL1-MONTH    00732399
+007324             END-IF                                               00732499
+007325             END-PERFORM.                                         00732599
+007326                                                                  00732699
+007327     MOVE WS-DAY   TO HL1-DAY.                                    00732799
+007328     MOVE WS-YEAR  TO HL1-YEAR.                                   00732899
+007329     MOVE WS-HOUR  TO HL2-HOUR.                                   00732999
+007330     MOVE WS-MIN   TO HL2-MIN.                                    00733099
+007331                                                                  00733132
+007332                                                                  00733281
+007333                                                                  00733381
+007334******************************************************************00733481
+007335* Note: headings & pagecounts are only for the error report, not *00733581
+007336*       the internal disk file for valid records                 *00733681
+007337******************************************************************00733781
+007338*---------------------*                                           00733881
+007339 A200-HEADINGS-MODULE.                                            00733981
+007340*---------------------*                                           00734081
+007341      ADD   1             TO WS-PAGE-COUNT.                       00734181
+007342      MOVE  WS-PAGE-COUNT TO HL1-PAGE-NUM.                        00734281
+007343      MOVE  ZEROS         TO WS-LINE-COUNT.                       00734381
+007344      WRITE PRINT-LINE-ERRORRPT                                   00734481
+007345            FROM  HL1-HEADING-LINE-1                              00734581
+007346            AFTER ADVANCING PAGE.                                 00734681
+007347      WRITE PRINT-LINE-ERRORRPT                                   00734781
+007348            FROM  HL2-HEADING-LINE-2                              00734881
+007349            AFTER ADVANCING 1 LINE.                               00734981
+007350      WRITE PRINT-LINE-ERRORRPT                                   00735081
+007351            FROM  WS-BLANK-LINE                                   00735181
+007352            AFTER ADVANCING 1 LINE.                               00735281
+007353      WRITE PRINT-LINE-ERRORRPT                                   00735381
+007354            FROM  HL3-HEADING-LINE-3                              00735481
+007355            AFTER ADVANCING 1 LINE.                               00735581
+007356      WRITE PRINT-LINE-ERRORRPT                                   00735681
+007357            FROM  HL4-HEADING-LINE-4                              00735781
+007358            AFTER ADVANCING 1 LINE.                               00735881
+007359                                                                  00735981
+007360                                                                  00736081
+007361                                                                  00736181
+007362*------------------*                                              00736281
+007363 A300-ERROR-MODULE.                                               00736381
+007364*------------------*                                              00736481
+007365      MOVE "N" TO IS-THERE-AN-ERROR.                              00736581
+007366      PERFORM B100-CHECK-CUSTNUM-RANGE.                           00736689
+007367      PERFORM B200-CHECK-IF-CUSTNAME-BLANK.                       00736789
+007368      PERFORM B300-CHECK-STORENUM-RANGE                           00736889
+007369      PERFORM B400-IS-SALESPERSONNUM-BLANK.                       00736989
+007370      PERFORM B500-CHECK-CONSISTENCY.                             00737089
+007371      PERFORM B600-CHECK-SALESAMOUNT-RANGE.                       00737189
+007372      PERFORM B800-CHECK-DATE-FORMAT.                             00737289
+007373      PERFORM B900-CHECK-DATE-RANGE.                              00737382
+007374      IF IS-THERE-AN-ERROR = "N"                                  00737481
+007375         WRITE PRINT-LINE-CUSTDAT2                                00737581
+007376               FROM IN-CUSTDAT-RECORD                             00737681
+007377         ADD 1 TO WS-TOTAL-RECS-VALID                             00737781
+007378      END-IF.                                                     00737881
+007379      ADD 1   TO WS-TOTAL-RECS-PROCESSED.                         00737981
+007380                                                                  00738081
+007381                                                                  00738181
+007382                                                                  00738281
+007383*---------------------*                                           00738399
+007384 A400-FINALIZE-MODULE.                                            00738499
+007385*---------------------*                                           00738599
+007386      MOVE  WS-TOTAL-RECS-PROCESSED TO TL-RECORDS-PROCESSED.      00738699
+007387      MOVE  WS-TOTAL-RECS-VALID     TO TL-RECORDS-VALID.          00738799
+007388      MOVE  WS-TOTAL-RECS-INVALID   TO TL-RECORDS-INVALID.        00738899
+007389      MOVE  WS-TOTAL-FIELD-ERRORS   TO TL-FIELD-ERRORS.           00738999
+007390      WRITE PRINT-LINE-ERRORRPT                                   00739099
+007391            FROM  WS-LINE-SEPARATOR-2                             00739199
+007392            AFTER ADVANCING 1 LINE                                00739299
+007393      WRITE PRINT-LINE-ERRORRPT                                   00739399
+007394            FROM  WS-BLANK-LINE                                   00739499
+007395            AFTER ADVANCING 1 LINE.                               00739599
+007396      WRITE PRINT-LINE-ERRORRPT                                   00739699
+007397            FROM  TL-TOTAL-LINE                                   00739799
+007398            AFTER ADVANCING 1 LINE.                               00739899
+007399      CLOSE IN-CUSTDAT                                            00739999
+007400            OUT-CUSTDAT2                                          00740099
+007401            OUT-ERRORRPT.                                         00740199
+007402                                                                  00740299
+007403                                                                  00740399
+007404                                                                  00740499
+007405*---------------*                                                 00740581
+007406 C100-ERROR-RTN.                                                  00740681
+007407*---------------*                                                 00740781
+007408      IF IN-CUST-NUM = EDL-CUST-NUM                               00740881
+007409         WRITE PRINT-LINE-ERRORRPT                                00740981
+007410               FROM  EDL-ERROR-DETAIL-LINE                        00741081
+007411               AFTER ADVANCING 1 LINE                             00741181
+007412      ELSE                                                        00741281
+007413         MOVE IN-CUST-NUM  TO EDL-CUST-NUM                        00741381
+007414         MOVE IN-CUST-NAME TO EDL-CUST-NAME                       00741481
+007415         WRITE PRINT-LINE-ERRORRPT                                00741581
+007416               FROM  WS-LINE-SEPARATOR-2                          00741699
+007417               AFTER ADVANCING 1 LINE                             00741781
+007418         WRITE PRINT-LINE-ERRORRPT                                00741881
+007419               FROM  EDL-ERROR-DETAIL-LINE                        00741981
+007420               AFTER ADVANCING 1 LINE                             00742081
+007421         ADD  1            TO WS-TOTAL-RECS-INVALID               00742181
+007422      END-IF.                                                     00742281
+007423                                                                  00742381
+007424                                                                  00742481
+007425                                                                  00742581
+007426*-------------------------*                                       00742681
+007427 B100-CHECK-CUSTNUM-RANGE.                                        00742781
+007428*-------------------------*                                       00742881
+007429      IF IN-CUST-NUM NOT NUMERIC                                  00742981
+007430         MOVE "Y"         TO IS-THERE-AN-ERROR                    00743081
+007431         ADD  1           TO WS-TOTAL-FIELD-ERRORS                00743181
+007432         MOVE IN-CUST-NUM TO EDL-ERROR-FIELD                      00743281
+007433         MOVE "1.0, CUSTOMER NUMBER NOT NUMERIC"                  00743390
+007434                          TO EDL-ERROR-MESSAGE                    00743481
+007435         PERFORM C100-ERROR-RTN                                   00743581
+007436      ELSE                                                        00743681
+007437         IF NOT VALID-CUST-NUM                                    00743781
+007438                MOVE "Y"         TO IS-THERE-AN-ERROR             00743881
+007439                ADD  1           TO WS-TOTAL-FIELD-ERRORS         00743981
+007440                MOVE IN-CUST-NUM TO EDL-ERROR-FIELD               00744081
+007441                MOVE "1.5, CUSTOMER NUMBER NOT IN RANGE 101-9621" 00744190
+007442                                 TO EDL-ERROR-MESSAGE             00744281
+007443                PERFORM C100-ERROR-RTN                            00744381
+007444         END-IF                                                   00744481
+007445      END-IF.                                                     00744581
+007446                                                                  00744681
+007447                                                                  00744781
+007448                                                                  00744881
+007449*-----------------------------*                                   00744981
+007450 B200-CHECK-IF-CUSTNAME-BLANK.                                    00745081
+007451*-----------------------------*                                   00745181
+007452      IF IN-CUST-NAME = SPACES                                    00745281
+007453         MOVE "Y"          TO IS-THERE-AN-ERROR                   00745381
+007454         ADD  1            TO WS-TOTAL-FIELD-ERRORS               00745481
+007455         MOVE IN-CUST-NAME TO EDL-ERROR-FIELD                     00745581
+007456         MOVE "2.0, CUSTOMER NAME IS BLANK"                       00745690
+007457                           TO EDL-ERROR-MESSAGE                   00745781
+007458         PERFORM C100-ERROR-RTN                                   00745881
+007459      END-IF.                                                     00745981
+007460                                                                  00746081
+007461                                                                  00746181
+007462                                                                  00746281
+007463*-------------------------*                                       00746381
+007464 B300-CHECK-STORENUM-RANGE.                                       00746481
+007465*-------------------------*                                       00746581
+007466      IF IN-STORE-NUM NOT NUMERIC                                 00746681
+007467         MOVE "Y"          TO IS-THERE-AN-ERROR                   00746781
+007468         ADD  1            TO WS-TOTAL-FIELD-ERRORS               00746881
+007469         MOVE IN-STORE-NUM TO EDL-ERROR-FIELD                     00746981
+007470         MOVE "3.0, STORE NUMBER NOT NUMERIC"                     00747090
+007471                           TO EDL-ERROR-MESSAGE                   00747181
+007472         PERFORM C100-ERROR-RTN                                   00747281
+007473      ELSE                                                        00747381
+007474         IF NOT VALID-STORE-NUM                                   00747481
+007475                MOVE "Y"          TO IS-THERE-AN-ERROR            00747581
+007476                ADD  1            TO WS-TOTAL-FIELD-ERRORS        00747681
+007477                MOVE IN-STORE-NUM TO EDL-ERROR-FIELD              00747781
+007478                MOVE "3.5, STORE NUMBER NOT IN RANGE 1-4"         00747890
+007479                                  TO EDL-ERROR-MESSAGE            00747981
+007480                PERFORM C100-ERROR-RTN                            00748081
+007481         END-IF                                                   00748181
+007482      END-IF.                                                     00748281
+007483                                                                  00748381
+007484                                                                  00748481
+007485                                                                  00748581
+007486*-----------------------------*                                   00748681
+007487 B400-IS-SALESPERSONNUM-BLANK.                                    00748781
+007488*-----------------------------*                                   00748881
+007489      IF IN-SALESPERSON-NUM = SPACES                              00748981
+007490             MOVE "Y"                TO IS-THERE-AN-ERROR         00749081
+007491             ADD  1                  TO WS-TOTAL-FIELD-ERRORS     00749181
+007492             MOVE IN-SALESPERSON-NUM TO EDL-ERROR-FIELD           00749281
+007493             MOVE "4.0, SALESPERSON NUMBER IS BLANK"              00749390
+007494                                     TO EDL-ERROR-MESSAGE         00749481
+007495             PERFORM C100-ERROR-RTN                               00749581
+007496      END-IF.                                                     00749681
+007497                                                                  00749781
+007498                                                                  00749881
+007499                                                                  00749981
+007500******************************************************************00750081
+007501* IN-STORE-NUM and IN-SALESPERSON-NUM have both already been     *00750181
+007502*  checked for numeric integrity, DO NOT increment total field   *00750281
+007503*  errors or write a new error report line for numeric error     *00750381
+007504******************************************************************00750481
+007505*-----------------------*                                         00750581
+007506 B500-CHECK-CONSISTENCY.                                          00750681
+007507*-----------------------*                                         00750781
+007508      IF IN-SALESPERSON-NUM IS NUMERIC AND VALID-STORE-NUM        00750896
+007509         EVALUATE IN-SALESPERSON-NUM                              00750981
+007510          WHEN 1 THRU 87                                          00751081
+007511            IF NOT IN-STORE-NUM = 1                               00751181
+007512                MOVE "Y"                 TO IS-THERE-AN-ERROR     00751281
+007513                ADD  1                   TO WS-TOTAL-FIELD-ERRORS 00751381
+007514                MOVE IN-SALESPERSON-NUM  TO EDL-ERROR-FIELD-5A    00751493
+007515                MOVE ", "                TO EDL-ERROR-FIELD-5B    00751593
+007516                MOVE IN-STORE-NUM        TO EDL-ERROR-FIELD-5C    00751693
+007517                MOVE                                              00751790
+007518         "5.1, SALESPERSON NUM(001-087), STORE NUM(1), BAD MATCH" 00751899
+007519                                         TO EDL-ERROR-MESSAGE     00751999
+007520                PERFORM C100-ERROR-RTN                            00752099
+007521            END-IF                                                00752199
+007522          WHEN 88 THRU 192                                        00752299
+007523            IF NOT IN-STORE-NUM = 2                               00752399
+007524                MOVE "Y"                 TO IS-THERE-AN-ERROR     00752499
+007525                ADD  1                   TO WS-TOTAL-FIELD-ERRORS 00752599
+007526                MOVE IN-SALESPERSON-NUM  TO EDL-ERROR-FIELD-5A    00752699
+007527                MOVE ", "                TO EDL-ERROR-FIELD-5B    00752799
+007528                MOVE IN-STORE-NUM        TO EDL-ERROR-FIELD-5C    00752899
+007529                MOVE                                              00752999
+007530         "5.2, SALESPERSON NUM(088-192), STORE NUM(2), BAD MATCH" 00753099
+007531                                         TO EDL-ERROR-MESSAGE     00753199
+007532                PERFORM C100-ERROR-RTN                            00753299
+007533            END-IF                                                00753399
+007534          WHEN 193 THRU 254                                       00753499
+007535            IF NOT IN-STORE-NUM = 3                               00753599
+007536                MOVE "Y"                 TO IS-THERE-AN-ERROR     00753699
+007537                ADD  1                   TO WS-TOTAL-FIELD-ERRORS 00753799
+007538                MOVE IN-SALESPERSON-NUM  TO EDL-ERROR-FIELD-5A    00753899
+007539                MOVE ", "                TO EDL-ERROR-FIELD-5B    00753999
+007540                MOVE IN-STORE-NUM        TO EDL-ERROR-FIELD-5C    00754099
+007541                MOVE                                              00754199
+007542         "5.3, SALESPERSON NUM(193-254), STORE NUM(3), BAD MATCH" 00754299
+007543                                         TO EDL-ERROR-MESSAGE     00754399
+007544                PERFORM C100-ERROR-RTN                            00754499
+007545            END-IF                                                00754599
+007546          WHEN 255 THRU 400                                       00754699
+007547            IF NOT IN-STORE-NUM = 4                               00754799
+007548                MOVE "Y"                 TO IS-THERE-AN-ERROR     00754899
+007549                ADD  1                   TO WS-TOTAL-FIELD-ERRORS 00754999
+007550                MOVE IN-SALESPERSON-NUM  TO EDL-ERROR-FIELD-5A    00755099
+007551                MOVE ", "                TO EDL-ERROR-FIELD-5B    00755199
+007552                MOVE IN-STORE-NUM        TO EDL-ERROR-FIELD-5C    00755299
+007553                MOVE                                              00755399
+007554         "5.4, SALESPERSON NUM(255-400), STORE NUM(4), BAD MATCH" 00755499
+007555                                         TO EDL-ERROR-MESSAGE     00755599
+007556                PERFORM C100-ERROR-RTN                            00755699
+007557            END-IF                                                00755799
+007558         END-EVALUATE                                             00755899
+007559      END-IF.                                                     00755999
+007560                                                                  00756099
+007561                                                                  00756199
+007562                                                                  00756299
+007563*-----------------------------*                                   00756399
+007564 B600-CHECK-SALESAMOUNT-RANGE.                                    00756499
+007565*-----------------------------*                                   00756599
+007566      IF IN-SALES-AMOUNT NOT NUMERIC                              00756699
+007567         MOVE "Y"               TO IS-THERE-AN-ERROR              00756799
+007568         ADD  1                 TO WS-TOTAL-FIELD-ERRORS          00756899
+007569         MOVE IN-SALES-AMOUNT-X TO EDL-ERROR-FIELD                00756999
+007570         MOVE "6.0, SALES AMOUNT NOT NUMERIC"                     00757099
+007571                                TO EDL-ERROR-MESSAGE              00757199
+007572         PERFORM C100-ERROR-RTN                                   00757299
+007573      ELSE                                                        00757399
+007574         IF NOT VALID-SALES-RANGE                                 00757499
+007575                MOVE "Y"               TO IS-THERE-AN-ERROR       00757599
+007576                ADD  1                 TO WS-TOTAL-FIELD-ERRORS   00757699
+007578                MOVE IN-SALES-AMOUNT   TO EDL-ERROR-FIELD-6A      00757899
+007579               MOVE "7.0, SALES AMOUNT NOT IN RANGE $0.00-$150.00"00757999
+007580                                       TO EDL-ERROR-MESSAGE       00758099
+007581                PERFORM C100-ERROR-RTN                            00758199
+007582         END-IF                                                   00758299
+007583      END-IF.                                                     00758399
+007584                                                                  00758499
+007585                                                                  00758599
+007586                                                                  00758699
+007587*-----------------------*                                         00758799
+007588 B800-CHECK-DATE-FORMAT.                                          00758899
+007589*-----------------------*                                         00758999
+007590      IF IN-SALE-DATE NOT NUMERIC                                 00759099
+007591         MOVE "Y"          TO IS-THERE-AN-ERROR                   00759199
+007592         ADD  1            TO WS-TOTAL-FIELD-ERRORS               00759299
+007593         MOVE IN-SALE-DATE TO EDL-ERROR-FIELD                     00759399
+007594         MOVE "8.0, SALE DATE NOT NUMERIC"                        00759499
+007595                           TO EDL-ERROR-MESSAGE                   00759599
+007596         PERFORM C100-ERROR-RTN                                   00759699
+007597      ELSE                                                        00759799
+007598         IF NOT VALID-SALE-YEAR                                   00759899
+007599                MOVE "Y"           TO IS-THERE-AN-ERROR           00759999
+007600                ADD  1             TO WS-TOTAL-FIELD-ERRORS       00760099
+007601                MOVE "("           TO EDL-ERROR-FIELD-8YA         00760199
+007602                MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8YB         00760299
+007603                MOVE ")"           TO EDL-ERROR-FIELD-8YC         00760399
+007604                MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8YD         00760499
+007605                MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8YE         00760599
+007606                MOVE "8.Y, SALE YEAR OUT OF RANGE"                00760699
+007607                                   TO EDL-ERROR-MESSAGE           00760799
+007608                PERFORM C100-ERROR-RTN                            00760899
+007609         END-IF                                                   00760999
+007610         IF NOT VALID-SALE-MONTH                                  00761099
+007611                MOVE "Y"           TO IS-THERE-AN-ERROR           00761199
+007612                ADD  1             TO WS-TOTAL-FIELD-ERRORS       00761299
+007613                MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8MA         00761399
+007614                MOVE "("           TO EDL-ERROR-FIELD-8MB         00761499
+007615                MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8MC         00761599
+007616                MOVE ")"           TO EDL-ERROR-FIELD-8MD         00761699
+007617                MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8ME         00761799
+007618                MOVE "8.M, SALE MONTH OUT OF RANGE"               00761899
+007619                                   TO EDL-ERROR-MESSAGE           00761999
+007620                PERFORM C100-ERROR-RTN                            00762099
+007621         ELSE                                                     00762199
+007622         EVALUATE IN-SALE-MONTH                                   00762299
+007623           WHEN 1                                                 00762399
+007624              IF NOT VALID-JAN                                    00762499
+007625                 MOVE "Y"         TO IS-THERE-AN-ERROR            00762599
+007626                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00762699
+007627                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00762799
+007628                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00762899
+007629                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00762999
+007630                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00763099
+007631                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00763199
+007632                 MOVE "8.D, SALE DAY OUT OF RANGE FOR JAN."       00763297
+007633                                  TO EDL-ERROR-MESSAGE            00763397
+007634                PERFORM C100-ERROR-RTN                            00763497
+007635              END-IF                                              00763597
+007636           WHEN 2                                                 00763697
+007637              IF NOT VALID-FEB                                    00763797
+007638                 MOVE "Y"         TO IS-THERE-AN-ERROR            00763897
+007639                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00763997
+007640                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00764099
+007641                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00764199
+007642                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00764299
+007643                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00764399
+007644                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00764499
+007645                 MOVE "8.D, SALE DAY OUT OF RANGE FOR FEB."       00764597
+007646                                  TO EDL-ERROR-MESSAGE            00764697
+007647                PERFORM C100-ERROR-RTN                            00764797
+007648              END-IF                                              00764897
+007649           WHEN 3                                                 00764997
+007650              IF NOT VALID-MAR                                    00765097
+007651                 MOVE "Y"         TO IS-THERE-AN-ERROR            00765197
+007652                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00765297
+007653                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00765399
+007654                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00765499
+007655                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00765599
+007656                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00765699
+007657                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00765799
+007658                 MOVE "8.D, SALE DAY OUT OF RANGE FOR MAR."       00765897
+007659                                  TO EDL-ERROR-MESSAGE            00765997
+007660                PERFORM C100-ERROR-RTN                            00766097
+007661              END-IF                                              00766197
+007662           WHEN 4                                                 00766297
+007663              IF NOT VALID-APR                                    00766397
+007664                 MOVE "Y"         TO IS-THERE-AN-ERROR            00766497
+007665                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00766597
+007666                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00766699
+007667                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00766799
+007668                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00766899
+007669                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00766999
+007670                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00767099
+007671                 MOVE "8.D, SALE DAY OUT OF RANGE FOR APRIL"      00767197
+007672                                  TO EDL-ERROR-MESSAGE            00767297
+007673                PERFORM C100-ERROR-RTN                            00767397
+007674              END-IF                                              00767497
+007675           WHEN 5                                                 00767597
+007676              IF NOT VALID-MAY                                    00767697
+007677                 MOVE "Y"         TO IS-THERE-AN-ERROR            00767797
+007678                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00767897
+007679                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00767999
+007680                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00768099
+007681                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00768199
+007682                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00768299
+007683                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00768399
+007684                 MOVE "8.D, SALE DAY OUT OF RANGE FOR MAY."       00768497
+007685                                  TO EDL-ERROR-MESSAGE            00768597
+007686                PERFORM C100-ERROR-RTN                            00768697
+007687              END-IF                                              00768797
+007688           WHEN 6                                                 00768897
+007689              IF NOT VALID-JUN                                    00768997
+007690                 MOVE "Y"         TO IS-THERE-AN-ERROR            00769097
+007691                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00769197
+007692                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00769299
+007693                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00769399
+007694                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00769499
+007695                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00769599
+007696                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00769699
+007697                 MOVE "8.D, SALE DAY OUT OF RANGE FOR JUNE"       00769797
+007698                                  TO EDL-ERROR-MESSAGE            00769897
+007699                PERFORM C100-ERROR-RTN                            00769997
+007700              END-IF                                              00770097
+007701           WHEN 7                                                 00770197
+007702              IF NOT VALID-JUL                                    00770297
+007703                 MOVE "Y"         TO IS-THERE-AN-ERROR            00770397
+007704                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00770497
+007705                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00770599
+007706                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00770699
+007707                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00770799
+007708                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00770899
+007709                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00770999
+007710                 MOVE "8.D, SALE DAY OUT OF RANGE FOR JULY"       00771097
+007711                                  TO EDL-ERROR-MESSAGE            00771197
+007712                PERFORM C100-ERROR-RTN                            00771297
+007713              END-IF                                              00771397
+007714           WHEN 8                                                 00771497
+007715              IF NOT VALID-AUG                                    00771597
+007716                 MOVE "Y"         TO IS-THERE-AN-ERROR            00771697
+007717                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00771797
+007718                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00771899
+007719                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00771999
+007720                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00772099
+007721                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00772199
+007722                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00772299
+007723                 MOVE "8.D, SALE DAY OUT OF RANGE FOR AUG."       00772397
+007724                                  TO EDL-ERROR-MESSAGE            00772497
+007725                PERFORM C100-ERROR-RTN                            00772597
+007726              END-IF                                              00772697
+007727           WHEN 9                                                 00772797
+007728              IF NOT VALID-SEP                                    00772897
+007729                 MOVE "Y"         TO IS-THERE-AN-ERROR            00772997
+007730                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00773097
+007731                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00773199
+007732                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00773299
+007733                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00773399
+007734                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00773499
+007735                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00773599
+007736                 MOVE "8.D, SALE DAY OUT OF RANGE FOR SEP."       00773697
+007737                                  TO EDL-ERROR-MESSAGE            00773797
+007738                PERFORM C100-ERROR-RTN                            00773897
+007739              END-IF                                              00773997
+007740           WHEN 10                                                00774097
+007741              IF NOT VALID-OCT                                    00774197
+007742                 MOVE "Y"         TO IS-THERE-AN-ERROR            00774297
+007743                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00774397
+007744                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00774499
+007745                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00774599
+007746                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00774699
+007747                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00774799
+007748                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00774899
+007749                 MOVE "8.D, SALE DAY OUT OF RANGE FOR OCT."       00774997
+007750                                  TO EDL-ERROR-MESSAGE            00775097
+007751                PERFORM C100-ERROR-RTN                            00775197
+007752              END-IF                                              00775297
+007753           WHEN 11                                                00775397
+007754              IF NOT VALID-NOV                                    00775497
+007755                 MOVE "Y"         TO IS-THERE-AN-ERROR            00775597
+007756                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00775697
+007757                 MOVE IN-SALE-YEAR  TO EDL-ERROR-FIELD-8DA        00775799
+007758                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00775899
+007759                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00775999
+007760                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00776099
+007761                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00776199
+007762                 MOVE "8.D, SALE DAY OUT OF RANGE FOR NOV."       00776297
+007763                                  TO EDL-ERROR-MESSAGE            00776397
+007764                PERFORM C100-ERROR-RTN                            00776497
+007765              END-IF                                              00776597
+007766           WHEN 12                                                00776697
+007767              IF NOT VALID-DEC                                    00776797
+007768                 MOVE "Y"         TO IS-THERE-AN-ERROR            00776897
+007769                 ADD  1           TO WS-TOTAL-FIELD-ERRORS        00776999
+007770                 MOVE IN-SALE-MONTH TO EDL-ERROR-FIELD-8DB        00777099
+007771                 MOVE "("           TO EDL-ERROR-FIELD-8DC        00777199
+007772                 MOVE IN-SALE-DAY   TO EDL-ERROR-FIELD-8DD        00777299
+007773                 MOVE ")"           TO EDL-ERROR-FIELD-8DE        00777399
+007774                 MOVE IN-SALE-DAY TO EDL-ERROR-FIELD              00777497
+007775                 MOVE "8.D, SALE DAY OUT OF RANGE FOR DEC."       00777597
+007776                                  TO EDL-ERROR-MESSAGE            00777697
+007777                PERFORM C100-ERROR-RTN                            00777797
+007778              END-IF                                              00777897
+007779         END-EVALUATE                                             00777997
+007780      END-IF.                                                     00778097
+007781                                                                  00778197
+007782                                                                  00778297
+007783                                                                  00778397
+007784*---------------------*                                           00778497
+007785 B900-CHECK-DATE-RANGE.                                           00778597
+007786*---------------------*                                           00778697
+007787      IF IN-SALE-DATE IS NUMERIC                                  00778797
+007788        IF VALID-SALE-YEAR  AND                                   00778897
+007789           VALID-SALE-MONTH AND                                   00778997
+007790           IN-SALE-DAY < 32                                       00779097
+007791                                                                  00779197
+007792           MOVE  IN-SALE-YEAR   TO WS-SALE-YEAR                   00779297
+007793           MOVE  IN-SALE-MONTH  TO WS-SALE-MONTH                  00779397
+007794           MOVE  IN-SALE-DAY    TO WS-SALE-DAY                    00779497
+007795                                                                  00779597
+007796           MOVE  WS-CURRENT-DATE    TO WS-RUN-DATE-INT            00779697
+007797           MOVE  WS-SALE-DATE-GROUP TO WS-SALE-DATE-INT           00779797
+007798                                                                  00779897
+007799           COMPUTE WS-DAYS-SINCE-SALE =                           00779997
+007800                   FUNCTION INTEGER-OF-DATE (WS-RUN-DATE-INT) -   00780097
+007801                   FUNCTION INTEGER-OF-DATE (WS-SALE-DATE-INT)    00780197
+007802                                                                  00780284
+007803           IF WS-DAYS-SINCE-SALE > 365                            00780384
+007804              MOVE "Y"          TO IS-THERE-AN-ERROR              00780484
+007805              ADD  1            TO WS-TOTAL-FIELD-ERRORS          00780584
+007806              MOVE IN-SALE-DATE TO EDL-ERROR-FIELD                00780684
+007807              MOVE                                                00780799
+007808           "9.0, SALE DATE MORE THAN 1 YEAR FROM TODAY -MMDDYYYY" 00780899
+007809                                TO EDL-ERROR-MESSAGE              00780999
+007810              PERFORM C100-ERROR-RTN                              00781099
+007811           ELSE                                                   00781199
+007812           IF WS-DAYS-SINCE-SALE < 0                              00781299
+007813              MOVE "Y"          TO IS-THERE-AN-ERROR              00781399
+007814              ADD  1            TO WS-TOTAL-FIELD-ERRORS          00781499
+007815              MOVE IN-SALE-DATE TO EDL-ERROR-FIELD                00781599
+007816              MOVE                                                00781699
+007817           "9.5, SALE DATE GREATER THAN TODAY          -MMDDYYYY" 00781799
+007818                                TO EDL-ERROR-MESSAGE              00781899
+007819              PERFORM C100-ERROR-RTN                              00781999
+007820           END-IF                                                 00782099
+007821        END-IF                                                    00782199
+007822      END-IF.                                                     00782299
+007823                                                                  00782399
+007824                                                                  00782499
+007825                                                                  00782599

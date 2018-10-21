@@ -1,0 +1,543 @@
+000010*----------------------------------------------------------------*00001001
+000020 IDENTIFICATION DIVISION.                                         00002001
+000030*----------------------------------------------------------------*00003001
+000040                                                                  00004001
+000050 PROGRAM-ID. PROG11.                                              00005001
+000060 AUTHOR. TYLER LAWTON.                                            00006001
+000070 DATE-WRITTEN. 10/11/18.                                          00007001
+000080 DATE-COMPILED.                                                   00008001
+000090                                                                  00009001
+000100*----------------------------------------------------------------*00010001
+000200 ENVIRONMENT DIVISION.                                            00020001
+000300*----------------------------------------------------------------*00030001
+000400                                                                  00040001
+000500*---------------------*                                           00050001
+000600 INPUT-OUTPUT SECTION.                                            00060001
+000700*---------------------*                                           00070001
+000800                                                                  00080001
+000900 FILE-CONTROL.                                                    00090001
+001000      SELECT IN-PAYMAST   ASSIGN TO PAYMAST.                      00100001
+001010      SELECT IN-PAYTRANS  ASSIGN TO PAYTRANS.                     00101001
+001100      SELECT OUT-CTRLRPT  ASSIGN TO CTRLRPT.                      00110001
+001200      SELECT OUT-PAYMAST2 ASSIGN TO PAYMAST2.                     00120001
+001300                                                                  00130001
+001400*----------------------------------------------------------------*00140001
+001500 DATA DIVISION.                                                   00150001
+001600*----------------------------------------------------------------*00160001
+001610                                                                  00161001
+001620*-------------*                                                   00162001
+001621 FILE SECTION.                                                    00162101
+001622*-------------*                                                   00162201
+001623                                                                  00162301
+001624 FD  IN-PAYMAST                                                   00162401
+001625     RECORDING MODE IS F                                          00162501
+001626     RECORD CONTAINS 80 CHARACTERS                                00162601
+001627     LABEL RECORDS ARE STANDARD                                   00162701
+001628     DATA RECORD IS IN-PAYMAST-RECORD.                            00162801
+001629                                                                  00162901
+001630 01  IN-PAYMAST-RECORD.                                           00163001
+002280     05 IN-PMAST-EMP-NUM    PIC X(5).                             00228013
+002281     05 IN-PMAST-EMP-NAME   PIC X(20).                            00228101
+002282     05 IN-PMAST-TERR-NUM   PIC 9(2).                             00228201
+002283     05 IN-PMAST-OFFICE-NUM PIC 9(2).                             00228301
+002284     05 IN-PMAST-RES-STATE  PIC X(2).                             00228401
+002285     05 IN-PMAST-DEDUCT-NUM PIC 9(1).                             00228501
+002286     05 IN-PMAST-ANNUAL-SAL PIC 9(6).                             00228601
+002287     05                     PIC X(42).                            00228705
+002290                                                                  00229001
+002291                                                                  00229104
+002292*                                                                 00229204
+002293 FD  IN-PAYTRANS                                                  00229304
+002294     RECORDING MODE IS F                                          00229404
+002295     RECORD CONTAINS 80 CHARACTERS                                00229504
+002296     LABEL RECORDS ARE STANDARD                                   00229604
+002297     DATA RECORD IS IN-PAYTRANS-RECORD.                           00229705
+002298                                                                  00229804
+002299 01  IN-PAYTRANS-RECORD.                                          00229905
+002300     05 IN-PTRANS-TRANS-CODE   PIC X(2).                          00230004
+002301        88 ADD-CODE              VALUE 'A'.                       00230104
+002302        88 DELETE-CODE           VALUE 'D'.                       00230205
+002303     05 IN-PTRANS-EMP-NUM      PIC X(5).                          00230313
+002304     05 IN-PTRANS-EMP-NAME     PIC X(20).                         00230404
+002305     05 IN-PTRANS-TERR-NUM     PIC 9(2).                          00230504
+002306     05 IN-PTRANS-OFFICE-NUM   PIC 9(2).                          00230604
+002307     05 IN-PTRANS-ANNUAL-SAL   PIC 9(6).                          00230704
+002308     05                        PIC X(43).                         00230805
+002320                                                                  00232001
+002330*                                                                 00233004
+002400 FD  OUT-CTRLRPT                                                  00240001
+002500     RECORDING MODE IS F                                          00250001
+002600     RECORD CONTAINS 132 CHARACTERS                               00260001
+002700     LABEL RECORDS ARE STANDARD                                   00270001
+002800     DATA RECORD IS PRINT-LINE-CTRLRPT.                           00280004
+002801                                                                  00280101
+002802 01  PRINT-LINE-CTRLRPT        PIC X(132).                        00280204
+002803                                                                  00280301
+002804                                                                  00280401
+002805*                                                                 00280504
+002806 FD  OUT-PAYMAST2                                                 00280605
+002807     RECORDING MODE IS F                                          00280704
+002808     RECORD CONTAINS 133 CHARACTERS                               00280830
+002809     LABEL RECORDS ARE STANDARD                                   00280904
+002810     DATA RECORD IS PRINT-LINE-PAYMAST2.                          00281005
+002811                                                                  00281104
+002812 01  PRINT-LINE-PAYMAST2.                                         00281227
+002813     05 OUT-PMAST-EMP-NUM    PIC X(5).                            00281327
+002814     05 OUT-PMAST-EMP-NAME   PIC X(20).                           00281427
+002815     05 OUT-PMAST-TERR-NUM   PIC 9(2).                            00281527
+002816     05 OUT-PMAST-OFFICE-NUM PIC 9(2).                            00281627
+002817     05 OUT-PMAST-RES-STATE  PIC X(2).                            00281727
+002818     05 OUT-PMAST-DEDUCT-NUM PIC 9(1).                            00281827
+002819     05 OUT-PMAST-ANNUAL-SAL PIC 9(6).                            00281927
+002820     05                      PIC X(95).                           00282035
+002821                                                                  00282104
+002822                                                                  00282204
+002823                                                                  00282304
+002824*------------------------*                                        00282404
+002825 WORKING-STORAGE SECTION.                                         00282504
+002826*------------------------*                                        00282604
+002830                                                                  00283004
+002837 01 WS-SWITCHES.                                                  00283704
+002842    05  CONTROL-SWITCH     PIC X   VALUE '0'.                     00284227
+002843        88 TRANS-REC-ADDED         VALUE '1'.                     00284327
+002844        88 OLD-REC-PASSED-THRU     VALUE '2'.                     00284427
+002845        88 OLD-REC-DELETED         VALUE '3'.                     00284527
+002846        88 ADD-ERROR               VALUE '4'.                     00284627
+002847        88 DEL-ERROR               VALUE '5'.                     00284727
+002848                                                                  00284807
+002849                                                                  00284907
+002850 01 WS-TOTALS.                                                    00285007
+002851    05  TOTAL-RECS-PROCESSED         PIC 999.                     00285107
+002852    05  TOTAL-OLD-RECS-PROCESSED     PIC 999.                     00285207
+002853    05  TOTAL-TRANS-RECS-PROCESSED   PIC 999.                     00285307
+002854    05  TOTAL-NEW-RECS-ADDED         PIC 999.                     00285407
+002855    05  TOTAL-OLD-RECS-DELETED       PIC 999.                     00285507
+002856    05  TOTAL-ADD-ERRORS             PIC 999.                     00285607
+002857    05  TOTAL-DEL-ERRORS             PIC 999.                     00285707
+002858    05  CTRLRPT-LINE-COUNT           PIC 999.                     00285807
+002859    05  CTRLRPT-PAGE-NUM             PIC 999.                     00285907
+002860                                                                  00286007
+002861                                                                  00286107
+002862 01 WS-CURRENT-DATE-AND-TIME.                                     00286207
+002863   03 WS-CURRENT-DATE.                                            00286307
+002864      05  WS-YEAR        PIC 9999.                                00286407
+002865      05  WS-MONTH       PIC 99.                                  00286507
+002866      05  WS-DAY         PIC 99.                                  00286607
+002867   03 WS-CURRENT-TIME.                                            00286707
+002868      05  WS-HOUR        PIC 99.                                  00286807
+002870      05  WS-MIN         PIC 99.                                  00287001
+002880   03                    PIC 9(9).                                00288001
+002890                                                                  00289001
+002891                                                                  00289104
+002900 01 WS-MONTH-NAMES.                                               00290001
+003000    05 WS-MONTH-TABLE                                             00300001
+003100       OCCURS 12 TIMES                                            00310001
+003200       INDEXED BY MONTH-INDEX.                                    00320001
+003300       10 MONTH-NAME   PIC XXX.                                   00330001
+003410                                                                  00341001
+003420                                                                  00342001
+003500 01 WS-BLANK-LINE      PIC X(132)     VALUE SPACES.               00350001
+003600                                                                  00360001
+003610                                                                  00361001
+003611*                                                                 00361101
+003620* Headings for CTRLRPT                                            00362001
+003630*                                                                 00363001
+003700 01 HL1-CTRLRPT.                                                  00370001
+003710    05                 PIC X(2)       VALUE SPACES.               00371001
+003800    05                 PIC X(6)       VALUE "DATE: ".             00380001
+003900    05  HL1-DATE.                                                 00390001
+004000        10  HL1-MONTH      PIC XXX.                               00400001
+004010        10                 PIC X      VALUE " ".                  00401001
+004011        10  HL1-DAY        PIC XX.                                00401101
+004012        10                 PIC XX     VALUE ", ".                 00401201
+004013        10  HL1-YEAR       PIC XXXX.                              00401301
+004014    05                 PIC X(11)      VALUE SPACES.               00401401
+004015    05                 PIC X(38)                                  00401501
+004016        VALUE "PAYROLL FILE ADD-DELETE CONTROL REPORT".           00401601
+004017    05                 PIC X(17)      VALUE SPACES.               00401701
+004018    05                 PIC X(6)       VALUE "PAGE: ".             00401801
+004019    05  HL1-PAGE-NUM   PIC Z99.                                   00401901
+004022                                                                  00402201
+004023 01 HL2-CTRLRPT.                                                  00402301
+004024    05                 PIC X(2)       VALUE SPACES.               00402401
+004025    05                 PIC X(6)       VALUE "TIME: ".             00402501
+004026    05  HL2-TIME.                                                 00402601
+004030        10  HL2-HOUR       PIC XX.                                00403001
+004040        10                 PIC X      VALUE ":".                  00404001
+004050        10  HL2-MIN        PIC XX.                                00405001
+004060    05                 PIC X(68)      VALUE SPACES.               00406001
+004070    05                 PIC X(14)                                  00407001
+004080        VALUE "PROG11-CTRLRPT".                                   00408001
+004092                                                                  00409201
+004100 01 HL3-CTRLRPT.                                                  00410001
+004110    05          PIC X(2)   VALUE SPACES.                          00411001
+004200    05          PIC X(4)   VALUE "EMPL".                          00420001
+004300    05          PIC X(4)   VALUE SPACES.                          00430001
+004400    05          PIC X(13)  VALUE "EMPLOYEE NAME".                 00440001
+004500    05          PIC X(10)  VALUE SPACES.                          00450001
+004600    05          PIC X(4)   VALUE "TERR".                          00460001
+004700    05          PIC X(2)   VALUE SPACES.                          00470001
+004800    05          PIC X(4)   VALUE "OFFC".                          00480001
+004810    05          PIC X(3)   VALUE SPACES.                          00481001
+004820    05          PIC X(6)   VALUE "ANNUAL".                        00482001
+004830    05          PIC X(2)   VALUE SPACES.                          00483001
+004840    05          PIC X(7)   VALUE "RESULTS".                       00484001
+004900                                                                  00490001
+005000 01 HL4-CTRLRPT.                                                  00500001
+005010    05          PIC X(2)   VALUE SPACES.                          00501001
+005100    05          PIC X(3)   VALUE "NUM".                           00510001
+005200    05          PIC X(29)  VALUE SPACES.                          00520001
+005300    05          PIC X(2)   VALUE "NO".                            00530001
+005400    05          PIC X(4)   VALUE SPACES.                          00540001
+005500    05          PIC X(2)   VALUE "NO".                            00550001
+005600    05          PIC X(5)   VALUE SPACES.                          00560015
+005700    05          PIC X(6)   VALUE "SALARY".                        00570001
+005800                                                                  00580001
+005801*                                                                 00580101
+005802* Print-line for CTRLRPT                                          00580201
+005803*                                                                 00580301
+005804 01 PL-CTRLRPT.                                                   00580408
+005805    05                  PIC X(2)   VALUE SPACES.                  00580502
+005806    05 PL-EMP-NUM       PIC 9(5).                                 00580602
+005807    05                  PIC X(3)   VALUE SPACES.                  00580702
+005808    05 PL-EMP-NAME      PIC X(20).                                00580802
+005809    05                  PIC X(4)   VALUE SPACES.                  00580902
+005810    05 PL-TERR-NUM      PIC 9(2).                                 00581002
+005811    05                  PIC X(4)   VALUE SPACES.                  00581102
+005812    05 PL-OFFICE-NUM    PIC 9(2).                                 00581202
+005813    05                  PIC X(2)   VALUE SPACES.                  00581302
+005814    05 PL-ANNUAL-SAL    PIC ZZZ,ZZ9.                              00581402
+005815    05                  PIC X(2)   VALUE SPACES.                  00581502
+005816    05 PL-RESULT        PIC X(44).                                00581602
+005821                                                                  00582102
+005822                                                                  00582202
+005823                                                                  00582302
+005824*                                                                 00582402
+005825* Totals area of CTRLRPT                                          00582502
+005826*                                                                 00582602
+005827 01 TL-CTRLRPT.                                                   00582702
+005828    05          PIC X(2)   VALUE SPACES.                          00582802
+005829    05          PIC X(15)  VALUE "CONTROL TOTALS:".               00582902
+005830                                                                  00583002
+005840                                                                  00584002
+005900 01 WS-LINE-SEPARATOR.                                            00590001
+005910    05               PIC X(2)  VALUE SPACES.                      00591001
+005930    05 SPACER        OCCURS 31 TIMES.                             00593017
+005940       10 EQUALSPACE PIC X VALUE "=".                             00594001
+005964                                                                  00596401
+005966                                                                  00596601
+005967 01 TL1-CTRLRPT.                                                  00596701
+005968    05               PIC X(2)  VALUE SPACES.                      00596801
+005969    05               PIC X(19) VALUE "OLD MASTER RECORDS:".       00596915
+005970    05               PIC X(5)  VALUE SPACES.                      00597016
+005971    05  TL1-OLD-MASTER-RECS    PIC ZZ9.                           00597116
+005972                                                                  00597201
+005973                                                                  00597301
+005974 01 TL2-CTRLRPT.                                                  00597401
+005975    05               PIC X(2)  VALUE SPACES.                      00597501
+005976    05               PIC X(14) VALUE "RECORDS ADDED:".            00597616
+005977    05               PIC X(10) VALUE SPACES.                      00597716
+005978    05  TL2-RECS-ADDED         PIC ZZ9.                           00597816
+005979                                                                  00597901
+005980                                                                  00598001
+005981 01 TL3-CTRLRPT.                                                  00598101
+005982    05               PIC X(2)  VALUE SPACES.                      00598201
+005983    05               PIC X(16) VALUE "RECORDS DELETED:".          00598316
+005984    05               PIC X(8)  VALUE SPACES.                      00598416
+005985    05  TL3-RECS-DELETED       PIC ZZ9.                           00598516
+005986                                                                  00598601
+005990                                                                  00599001
+005991 01 TL4-CTRLRPT.                                                  00599104
+005992    05               PIC X(5)  VALUE SPACES.                      00599217
+005993    05               PIC X(24) VALUE "ADD ERROR TRANSACTIONS:".   00599316
+005994    05               PIC X(1)  VALUE SPACES.                      00599416
+005995    05  TL4-ADD-ERRORS         PIC ZZ9.                           00599516
+005996                                                                  00599601
+005997                                                                  00599701
+005998 01 TL5-CTRLRPT.                                                  00599804
+005999    05               PIC X(2)  VALUE SPACES.                      00599901
+006000    05               PIC X(27) VALUE "DELETE ERROR TRANSACTIONS:".00600016
+006001    05               PIC X(1)  VALUE SPACES.                      00600116
+006002    05  TL5-DELETE-ERRORS      PIC ZZ9.                           00600216
+006003                                                                  00600301
+006006                                                                  00600601
+006053                                                                  00605301
+006054*----------------------------------------------------------------*00605401
+006055 PROCEDURE DIVISION.                                              00605501
+006056*----------------------------------------------------------------*00605601
+006057                                                                  00605701
+006058*------------*                                                    00605807
+006059 000-CONTROL.                                                     00605907
+006060*------------*                                                    00606007
+006061     PERFORM A100-INIT.                                           00606107
+006063     PERFORM A200-COMPARE-OLD-TO-TRANS                            00606309
+006064             UNTIL IN-PMAST-EMP-NUM  = HIGH-VALUES                00606405
+006065             AND   IN-PTRANS-EMP-NUM = HIGH-VALUES.               00606511
+006066                                                                  00606611
+006068     PERFORM A300-FINALIZE.                                       00606804
+006500     STOP RUN.                                                    00650001
+006600                                                                  00660001
+006700                                                                  00670001
+006800                                                                  00680001
+006900*----------*                                                      00690004
+007000 A100-INIT.                                                       00700004
+007100*----------*                                                      00710004
+007101                                                                  00710105
+007200      OPEN INPUT  IN-PAYMAST                                      00720004
+007210                  IN-PAYTRANS.                                    00721012
+007300      OPEN OUTPUT OUT-PAYMAST2                                    00730004
+007310                  OUT-CTRLRPT.                                    00731004
+007311                                                                  00731110
+007312      PERFORM C100-READ-TRANS.                                    00731210
+007313      PERFORM C200-READ-OLD-MASTER.                               00731312
+007315                                                                  00731506
+007321      MOVE FUNCTION CURRENT-DATE TO WS-CURRENT-DATE-AND-TIME.     00732104
+007322      MOVE "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC"                 00732204
+007323        TO WS-MONTH-NAMES.                                        00732304
+007324      MOVE WS-MONTH-TABLE (WS-MONTH) TO HL1-MONTH.                00732411
+007328      MOVE WS-DAY   TO HL1-DAY.                                   00732804
+007329      MOVE WS-YEAR  TO HL1-YEAR.                                  00732904
+007330      MOVE WS-HOUR  TO HL2-HOUR.                                  00733004
+007331      MOVE WS-MIN   TO HL2-MIN.                                   00733104
+007332                                                                  00733206
+007336      MOVE    ZEROS TO CTRLRPT-PAGE-NUM.                          00733607
+007337      PERFORM B400-WRITE-CTRL-HEADINGS.                           00733711
+007338                                                                  00733807
+007339                                                                  00733907
+007340                                                                  00734007
+007341*-------------------------*                                       00734107
+007342 B400-WRITE-CTRL-HEADINGS.                                        00734207
+007343*-------------------------*                                       00734307
+007344                                                                  00734407
+007345      ADD   1                TO CTRLRPT-PAGE-NUM.                 00734507
+007346      MOVE  CTRLRPT-PAGE-NUM TO HL1-PAGE-NUM.                     00734607
+007347      MOVE  ZEROS            TO CTRLRPT-LINE-COUNT.               00734707
+007348      WRITE PRINT-LINE-CTRLRPT                                    00734805
+007349            FROM  HL1-CTRLRPT                                     00734905
+007350            AFTER ADVANCING PAGE.                                 00735005
+007351      WRITE PRINT-LINE-CTRLRPT                                    00735105
+007352            FROM  HL2-CTRLRPT                                     00735205
+007353            AFTER ADVANCING 1 LINE.                               00735305
+007354      WRITE PRINT-LINE-CTRLRPT                                    00735405
+007355            FROM  WS-BLANK-LINE                                   00735505
+007356            AFTER ADVANCING 1 LINE.                               00735605
+007357      WRITE PRINT-LINE-CTRLRPT                                    00735705
+007358            FROM  HL3-CTRLRPT                                     00735805
+007359            AFTER ADVANCING 1 LINE.                               00735905
+007360      WRITE PRINT-LINE-CTRLRPT                                    00736005
+007361            FROM  HL4-CTRLRPT                                     00736105
+007362            AFTER ADVANCING 1 LINE.                               00736205
+007363      WRITE PRINT-LINE-CTRLRPT                                    00736307
+007364            FROM  WS-BLANK-LINE                                   00736407
+007365            AFTER ADVANCING 1 LINE.                               00736507
+007366                                                                  00736605
+007367                                                                  00736705
+007368                                                                  00736805
+007369*--------------------------*                                      00736907
+007370 A200-COMPARE-OLD-TO-TRANS.                                       00737007
+007371*--------------------------*                                      00737107
+007373      IF CTRLRPT-LINE-COUNT > 45                                  00737307
+007374         PERFORM B400-WRITE-CTRL-HEADINGS                         00737412
+007375      END-IF.                                                     00737507
+007376                                                                  00737607
+007377      EVALUATE TRUE                                               00737707
+007378        WHEN IN-PMAST-EMP-NUM = IN-PTRANS-EMP-NUM                 00737807
+007379             PERFORM B100-DELETE-RTN                              00737907
+007380        WHEN IN-PMAST-EMP-NUM > IN-PTRANS-EMP-NUM                 00738007
+007381             PERFORM B200-ADD-RTN                                 00738107
+007382        WHEN IN-PMAST-EMP-NUM < IN-PTRANS-EMP-NUM                 00738207
+007383             PERFORM B300-PASS-OLD-MAST-THRU                      00738307
+007384      END-EVALUATE.                                               00738407
+007390                                                                  00739007
+007399                                                                  00739904
+007443*----------------*                                                00744320
+007444 B100-DELETE-RTN.                                                 00744407
+007450*----------------*                                                00745020
+007452      EVALUATE TRUE                                               00745205
+007453        WHEN DELETE-CODE                                          00745305
+007454             SET   OLD-REC-DELETED TO TRUE                        00745420
+007455             ADD   1 TO TOTAL-OLD-RECS-DELETED                    00745520
+007456        WHEN ADD-CODE                                             00745607
+007457             SET   ADD-ERROR       TO TRUE                        00745720
+007458             ADD   1 TO TOTAL-ADD-ERRORS                          00745820
+007459             PERFORM C400-WRITE-NEW-MASTER                        00745934
+007461      END-EVALUATE.                                               00746107
+007462                                                                  00746207
+007463      PERFORM C300-WRITE-CTRLRPT.                                 00746307
+007464      PERFORM C200-READ-OLD-MASTER.                               00746412
+007465      PERFORM C100-READ-TRANS.                                    00746511
+007466                                                                  00746607
+007467                                                                  00746707
+007468*-------------*                                                   00746811
+007470 B200-ADD-RTN.                                                    00747011
+007480*-------------*                                                   00748011
+007487                                                                  00748705
+007488      IF ADD-CODE                                                 00748807
+007489         SET     TRANS-REC-ADDED    TO TRUE                       00748927
+007490         ADD     1 TO TOTAL-NEW-RECS-ADDED                        00749027
+007491         PERFORM C400-WRITE-NEW-MASTER                            00749127
+007494      ELSE                                                        00749407
+007495         SET     DEL-ERROR TO TRUE                                00749527
+007496         ADD     1 TO TOTAL-DEL-ERRORS                            00749627
+007497      END-IF.                                                     00749707
+007498                                                                  00749807
+007499      PERFORM C300-WRITE-CTRLRPT.                                 00749907
+007500      PERFORM C100-READ-TRANS.                                    00750007
+007501                                                                  00750107
+007502                                                                  00750207
+007503*------------------------*                                        00750307
+007504 B300-PASS-OLD-MAST-THRU.                                         00750407
+007505*------------------------*                                        00750507
+007506                                                                  00750619
+007507      SET     OLD-REC-PASSED-THRU TO TRUE.                        00750707
+007508      PERFORM C300-WRITE-CTRLRPT.                                 00750807
+007509      PERFORM C400-WRITE-NEW-MASTER                               00750927
+007512      PERFORM C200-READ-OLD-MASTER.                               00751207
+007513                                                                  00751307
+007514*----------------------*                                          00751427
+007515 C400-WRITE-NEW-MASTER.                                           00751527
+007516*----------------------*                                          00751627
+007517                                                                  00751727
+007518      EVALUATE TRUE                                               00751827
+007519                                                                  00751927
+007520        WHEN TRANS-REC-ADDED                                      00752027
+007521             MOVE IN-PTRANS-EMP-NUM    TO OUT-PMAST-EMP-NUM       00752127
+007522             MOVE IN-PTRANS-EMP-NAME   TO OUT-PMAST-EMP-NAME      00752227
+007523             MOVE IN-PTRANS-TERR-NUM   TO OUT-PMAST-TERR-NUM      00752327
+007524             MOVE IN-PTRANS-OFFICE-NUM TO OUT-PMAST-OFFICE-NUM    00752427
+007525             MOVE SPACES               TO OUT-PMAST-RES-STATE     00752527
+007526             MOVE ZEROS                TO OUT-PMAST-DEDUCT-NUM    00752627
+007527             MOVE IN-PTRANS-ANNUAL-SAL TO OUT-PMAST-ANNUAL-SAL    00752727
+007528                                                                  00752827
+007529        WHEN OLD-REC-PASSED-THRU OR ADD-ERROR                     00752934
+007532             MOVE IN-PMAST-EMP-NUM     TO OUT-PMAST-EMP-NUM       00753233
+007533             MOVE IN-PMAST-EMP-NAME    TO OUT-PMAST-EMP-NAME      00753333
+007534             MOVE IN-PMAST-TERR-NUM    TO OUT-PMAST-TERR-NUM      00753433
+007535             MOVE IN-PMAST-OFFICE-NUM  TO OUT-PMAST-OFFICE-NUM    00753533
+007536             MOVE IN-PMAST-RES-STATE   TO OUT-PMAST-RES-STATE     00753633
+007537             MOVE IN-PMAST-DEDUCT-NUM  TO OUT-PMAST-DEDUCT-NUM    00753733
+007538             MOVE IN-PMAST-ANNUAL-SAL  TO OUT-PMAST-ANNUAL-SAL    00753833
+007539                                                                  00753927
+007540      END-EVALUATE.                                               00754027
+007541                                                                  00754127
+007542      WRITE   PRINT-LINE-PAYMAST2.                                00754227
+007543                                                                  00754327
+007544*----------------*                                                00754427
+007545 C100-READ-TRANS.                                                 00754527
+007546*----------------*                                                00754627
+007547                                                                  00754727
+007548      READ IN-PAYTRANS                                            00754827
+007549           AT END       MOVE HIGH-VALUES TO IN-PTRANS-EMP-NUM     00754927
+007550           NOT AT END   ADD 1 TO TOTAL-TRANS-RECS-PROCESSED       00755013
+007560      END-READ.                                                   00756005
+007600                                                                  00760005
+007610                                                                  00761005
+007620*-----------------*                                               00762007
+007630 C200-READ-OLD-MASTER.                                            00763012
+007640*-----------------*                                               00764007
+007641                                                                  00764119
+007650      READ IN-PAYMAST                                             00765007
+007660           AT END       MOVE HIGH-VALUES TO IN-PMAST-EMP-NUM      00766013
+007670           NOT AT END   ADD 1 TO TOTAL-OLD-RECS-PROCESSED         00767013
+007680      END-READ.                                                   00768007
+007690                                                                  00769007
+007692                                                                  00769207
+007700*-------------------*                                             00770005
+007800 C300-WRITE-CTRLRPT.                                              00780005
+007900*-------------------*                                             00790005
+007970                                                                  00797007
+008000      EVALUATE TRUE                                               00800007
+008010                                                                  00801022
+008100        WHEN TRANS-REC-ADDED                                      00810013
+008101           MOVE 'RECORD ADDED'                    TO PL-RESULT    00810126
+008102           PERFORM D100-TRANS-REC-TO-CTRLRPT                      00810226
+008201                                                                  00820122
+008210        WHEN OLD-REC-PASSED-THRU                                  00821007
+008211           MOVE 'OLD MASTER PASSED TO NEW MASTER' TO PL-RESULT    00821126
+008212           PERFORM D200-MASTR-REC-TO-CTRLRPT                      00821226
+008221                                                                  00822122
+008230        WHEN OLD-REC-DELETED                                      00823007
+008231           MOVE 'VALID DELETE MATCH FOUND'        TO PL-RESULT    00823126
+008232           PERFORM D100-TRANS-REC-TO-CTRLRPT                      00823226
+008234                                                                  00823425
+008235           MOVE 'OLD MASTER RECORD DELETED'       TO PL-RESULT    00823526
+008236           PERFORM D200-MASTR-REC-TO-CTRLRPT                      00823626
+008241                                                                  00824122
+008250        WHEN ADD-ERROR                                            00825007
+008251           MOVE 'OLD MASTER PASSED TO NEW MASTER' TO PL-RESULT    00825126
+008252           PERFORM D200-MASTR-REC-TO-CTRLRPT                      00825226
+008259                                                                  00825921
+008260           MOVE 'ADD ERROR: EMPL NUM ALREADY ON FILE' TO PL-RESULT00826026
+008261           PERFORM D100-TRANS-REC-TO-CTRLRPT                      00826126
+008267                                                                  00826722
+008270        WHEN DEL-ERROR                                            00827007
+008271           MOVE 'DELETE ERROR: RECORD NOT ON FILE' TO PL-RESULT   00827126
+008272           PERFORM D100-TRANS-REC-TO-CTRLRPT                      00827226
+008278                                                                  00827822
+008280      END-EVALUATE.                                               00828007
+008300                                                                  00830005
+008700                                                                  00870005
+008800                                                                  00880005
+008810*--------------*                                                  00881020
+008820 A300-FINALIZE.                                                   00882020
+008830*--------------*                                                  00883020
+008840      MOVE  TOTAL-OLD-RECS-PROCESSED TO TL1-OLD-MASTER-RECS.      00884020
+008850      MOVE  TOTAL-NEW-RECS-ADDED     TO TL2-RECS-ADDED.           00885020
+008860      MOVE  TOTAL-OLD-RECS-DELETED   TO TL3-RECS-DELETED.         00886020
+008870      MOVE  TOTAL-ADD-ERRORS         TO TL4-ADD-ERRORS.           00887020
+008880      MOVE  TOTAL-DEL-ERRORS         TO TL5-DELETE-ERRORS.        00888020
+008890                                                                  00889020
+008891      WRITE PRINT-LINE-CTRLRPT  FROM  WS-BLANK-LINE               00889120
+008892            AFTER ADVANCING 1 LINE.                               00889220
+008893      WRITE PRINT-LINE-CTRLRPT  FROM  TL-CTRLRPT                  00889320
+008894            AFTER ADVANCING 1 LINE.                               00889420
+008895      WRITE PRINT-LINE-CTRLRPT  FROM  WS-LINE-SEPARATOR           00889520
+008896            AFTER ADVANCING 1 LINE.                               00889620
+008897      WRITE PRINT-LINE-CTRLRPT  FROM  TL1-CTRLRPT                 00889720
+008898            AFTER ADVANCING 1 LINE.                               00889820
+008899      WRITE PRINT-LINE-CTRLRPT  FROM  TL2-CTRLRPT                 00889920
+008900            AFTER ADVANCING 1 LINE.                               00890020
+008910      WRITE PRINT-LINE-CTRLRPT  FROM  TL3-CTRLRPT                 00891020
+008920            AFTER ADVANCING 1 LINE.                               00892020
+008930      WRITE PRINT-LINE-CTRLRPT  FROM  TL4-CTRLRPT                 00893020
+008940            AFTER ADVANCING 1 LINE.                               00894020
+008950      WRITE PRINT-LINE-CTRLRPT  FROM  TL5-CTRLRPT                 00895020
+008960            AFTER ADVANCING 1 LINE.                               00896020
+008970      WRITE PRINT-LINE-CTRLRPT  FROM  WS-LINE-SEPARATOR           00897020
+008980            AFTER ADVANCING 1 LINE.                               00898020
+008990                                                                  00899020
+008991      CLOSE IN-PAYMAST                                            00899120
+008992            IN-PAYTRANS                                           00899220
+008993            OUT-PAYMAST2                                          00899320
+008994            OUT-CTRLRPT.                                          00899420
+008995                                                                  00899520
+008996                                                                  00899620
+009000                                                                  00900005
+009710*--------------------------*                                      00971022
+009720 D100-TRANS-REC-TO-CTRLRPT.                                       00972023
+009730*--------------------------*                                      00973022
+009740                                                                  00974022
+009750      MOVE IN-PTRANS-EMP-NUM                 TO PL-EMP-NUM.       00975024
+009760      MOVE IN-PTRANS-EMP-NAME                TO PL-EMP-NAME.      00976024
+009770      MOVE IN-PTRANS-TERR-NUM                TO PL-TERR-NUM.      00977024
+009780      MOVE IN-PTRANS-OFFICE-NUM              TO PL-OFFICE-NUM.    00978024
+009790      MOVE IN-PTRANS-ANNUAL-SAL              TO PL-ANNUAL-SAL.    00979024
+009791      MOVE  PL-CTRLRPT TO PRINT-LINE-CTRLRPT.                     00979125
+009792      WRITE PRINT-LINE-CTRLRPT.                                   00979225
+009900                                                                  00990022
+010000                                                                  01000022
+010100                                                                  01010022
+010101*--------------------------*                                      01010123
+010102 D200-MASTR-REC-TO-CTRLRPT.                                       01010223
+010103*--------------------------*                                      01010323
+010104                                                                  01010423
+010105      MOVE IN-PMAST-EMP-NUM                  TO PL-EMP-NUM.       01010524
+010106      MOVE IN-PMAST-EMP-NAME                 TO PL-EMP-NAME.      01010624
+010107      MOVE IN-PMAST-TERR-NUM                 TO PL-TERR-NUM.      01010724
+010108      MOVE IN-PMAST-OFFICE-NUM               TO PL-OFFICE-NUM.    01010824
+010109      MOVE IN-PMAST-ANNUAL-SAL               TO PL-ANNUAL-SAL.    01010924
+010115      MOVE  PL-CTRLRPT TO PRINT-LINE-CTRLRPT.                     01011525
+010116      WRITE PRINT-LINE-CTRLRPT.                                   01011625
+010120                                                                  01012023
+010130                                                                  01013025
+010140                                                                  01014025
